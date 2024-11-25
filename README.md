@@ -1,1 +1,1 @@
-# SSO-Service
+# EasyCode-Backend
