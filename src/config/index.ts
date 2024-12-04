@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import db from '../Services/DB';
 dotenv.config();
 
 const requiredEnvVars = [
@@ -19,7 +20,7 @@ if (missingEnvVars.length > 0) {
     process.exit(1);
 }
 
-const config = {
+let config = {
     BACKEND_URL: process.env.BACKEND_URL as string,
     FRONTEND_URL: process.env.FRONTEND_URL as string,
     APP_NAME: process.env.APP_NAME as string,
@@ -37,6 +38,7 @@ const config = {
     HASH_SECRET: process.env.HASH_SECRET as string,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
+    ALLOWED_ORIGINS: [] as string[],
 };
 
 export default config;

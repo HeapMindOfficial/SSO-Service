@@ -3,6 +3,7 @@ export class AppError extends Error {
     reason: string;
     showStackTrace: boolean;
     type: string;
+    error: any
 
     constructor({
         message,
@@ -10,12 +11,14 @@ export class AppError extends Error {
         reason,
         stackTrace = false,
         type = 'request/failed',
+        error
     }: {
         message: string;
         statusCode: number;
         reason: string;
         stackTrace?: boolean;
-        type?: "request/failed" | "request/error";
+            type?: "request/failed" | "request/error";
+        error?: any;
     }) {
         super(message);
         this.statusCode = statusCode;
@@ -23,6 +26,7 @@ export class AppError extends Error {
         this.showStackTrace = stackTrace;
         this.type = type;
         Error.captureStackTrace(this, this.constructor);
+        this.error = error;
 
     }
 }

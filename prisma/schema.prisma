@@ -13,6 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model allowedOrigin {
+  id        String   @id @default(uuid())
+  origin    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model User {
   id           String              @id @default(uuid())
   email        String              @unique
@@ -22,20 +29,22 @@ model User {
   updatedAt    DateTime            @updatedAt
   authCodes    AuthorizationCode[]
   accessTokens AccessToken[]
+  RefreshToken RefreshToken[]
 }
 
 model OAuth2Client {
-  id           String              @id @default(uuid())
-  clientId     String              @unique
-  clientSecret String
-  name         String
-  redirectUris String[]
-  grantTypes   String[]
-  scopes       String[]
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  authCodes    AuthorizationCode[]
-  accessTokens AccessToken[]
+  id            String              @id @default(uuid())
+  clientId      String              @unique
+  clientSecret  String
+  name          String
+  redirectUris  String[]
+  grantTypes    String[]            @default(["authorization_code", "refresh_token"])
+  scopes        String[]            @default(["openid", "profile", "email"])
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  authCodes     AuthorizationCode[]
+  accessTokens  AccessToken[]
+  refreshTokens RefreshToken[]
 }
 
 model AuthorizationCode {
@@ -57,6 +66,17 @@ model AccessToken {
   clientId  String
   userId    String?
   scopes    String[]
+  expiresAt DateTime
+  createdAt DateTime     @default(now())
+  client    OAuth2Client @relation(fields: [clientId], references: [id])
+  user      User?        @relation(fields: [userId], references: [id])
+}
+
+model RefreshToken {
+  id        String       @id @default(uuid())
+  token     String       @unique
+  clientId  String
+  userId    String?
   expiresAt DateTime
   createdAt DateTime     @default(now())
   client    OAuth2Client @relation(fields: [clientId], references: [id])

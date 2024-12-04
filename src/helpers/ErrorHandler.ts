@@ -35,5 +35,6 @@ export const errorHandler = (err: AppError, req: Request, res: Response, next: N
         reason: reason,
         message: message,
         data: null,
+        error: err.error
     });
 };
