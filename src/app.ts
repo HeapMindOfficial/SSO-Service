@@ -61,6 +61,11 @@ app.get("/api/health", (req: Request, res: Response) => {
 app.use("/api/v1", AuthRoutes);
 app.use("/api/v1/origins", OriginRoutes);
 
+app.post("/redirect", (req: Request, res: Response) => {
+    console.log(req.body);
+    return res.status(302).redirect(req.body.data.url as string);
+})
+
 // Handle 404
 app.use((req: Request, res: Response) => {
     throw new AppError({

@@ -27,8 +27,24 @@ model User {
   name         String
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
+  deleted      Boolean             @default(false)
+  disabled     Boolean             @default(false)
   authCodes    AuthorizationCode[]
   accessTokens AccessToken[]
+  RefreshToken RefreshToken[]
+  sessions     sessions[]
+}
+
+model sessions {
+  id           String              @id @default(uuid())
+  userId       String
+  token        String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  expiresAt    DateTime
+  authCodes    AuthorizationCode[]
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  AccessToken  AccessToken[]
   RefreshToken RefreshToken[]
 }
 
@@ -45,6 +61,7 @@ model OAuth2Client {
   authCodes     AuthorizationCode[]
   accessTokens  AccessToken[]
   refreshTokens RefreshToken[]
+
 }
 
 model AuthorizationCode {
@@ -52,12 +69,14 @@ model AuthorizationCode {
   code        String       @unique
   clientId    String
   userId      String
+  sessionId   String
   scopes      String[]
   redirectUri String
   expiresAt   DateTime
   createdAt   DateTime     @default(now())
-  client      OAuth2Client @relation(fields: [clientId], references: [id])
-  user        User         @relation(fields: [userId], references: [id])
+  client      OAuth2Client @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session     sessions     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model AccessToken {
@@ -66,19 +85,23 @@ model AccessToken {
   clientId  String
   userId    String?
   scopes    String[]
+  sessionId String
   expiresAt DateTime
   createdAt DateTime     @default(now())
-  client    OAuth2Client @relation(fields: [clientId], references: [id])
-  user      User?        @relation(fields: [userId], references: [id])
+  client    OAuth2Client @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user      User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session   sessions     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model RefreshToken {
   id        String       @id @default(uuid())
   token     String       @unique
   clientId  String
+  sessionId String
   userId    String?
   expiresAt DateTime
   createdAt DateTime     @default(now())
-  client    OAuth2Client @relation(fields: [clientId], references: [id])
-  user      User?        @relation(fields: [userId], references: [id])
+  client    OAuth2Client @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user      User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session   sessions     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
