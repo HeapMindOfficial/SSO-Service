@@ -80,6 +80,19 @@ export const validateAccessTokenGeneratorSchema = z.object({
     }).required()
 });
 
+export const validateRefreshTokenGeneratorSchema = z.object({
+    data: z.object({
+        refreshToken: z.string().min(1, { message: "Authorization code is required" }),
+    }).required(),
+    meta: z.object({
+        responseType: z.string().min(1, { message: "Response type is required" }),
+        clientId: z.string().min(1, { message: "Client ID is required" }),
+        redirectUri: z.string().url({ message: "Invalid redirect URI" }),
+        scopes: z.array(z.string(), { message: "At least one scope is required" }),
+        clientSecret: z.string()
+    }).required()
+});
+
 
 export const authorizationCodeSchema = z.object({
     code: z.string().min(1, { message: "Authorization code is required" }),

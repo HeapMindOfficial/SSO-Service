@@ -7,7 +7,7 @@ import { OAuthBuilder } from "../../Services/OAuthBuilder";
 import { GrantTypes, ScopeTypes } from "../../models/OAuthClient";
 import { OAuth2Client } from "@prisma/client";
 import { authTokens } from "../../helpers/Tokens/authTokens";
-import { generateAccessToken } from "../../helpers/Tokens/accessTokens";
+import { generateAccessToken, generateNewAccessToken } from "../../helpers/Tokens/accessTokens";
 import { sessionTokens } from "../../helpers/Tokens/sessionToken";
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -115,7 +115,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
                 type: "request/error",
             }));
         }
-        
+
         return responseHandler({
             status: 200,
             success: true,
@@ -253,6 +253,56 @@ export const generateToken = async (req: Request, res: Response, next: NextFunct
     }
 }
 
+export const regenerateToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { responseType, clientId, redirectUri, scopes }: {
+            responseType: string,
+            clientId: string,
+            redirectUri: string,
+            scopes: string[]
+        } = req.body.meta;
+
+        const { refreshToken } = req.body.data;
+
+        if (responseType !== "refresh") {
+            return next(new AppError({
+                message: "Invalid response type",
+                statusCode: 400,
+                reason: "BAD_REQUEST",
+                type: "request/error",
+            }));
+        }
+
+        if (!refreshToken) {
+            return next(new AppError({
+                message: "Authorization code is required",
+                statusCode: 400,
+                reason: "BAD_REQUEST",
+                type: "request/error",
+            }));
+        }
+
+        const accessToken = await generateNewAccessToken(refreshToken);
+        return responseHandler({
+            status: 200,
+            success: true,
+            message: "Token generated successfully",
+            data: {
+                accessToken,
+                refreshToken,
+            }
+        }, req, res);
+
+    } catch (error: Error | any) {
+        return next(new AppError({
+            message: error?.message || "Internal server error",
+            statusCode: 500,
+            reason: "INTERNAL_SERVER_ERROR",
+            type: "request/error",
+        }));
+    }
+}
+
 export const registerClient = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { name, redirectUris, grantTypes, scopes }: {
@@ -284,7 +334,6 @@ export const registerClient = async (req: Request, res: Response, next: NextFunc
         }));
     }
 }
-
 
 export const validateClient = async (req: Request, res: Response, next: NextFunction) => {
     try {

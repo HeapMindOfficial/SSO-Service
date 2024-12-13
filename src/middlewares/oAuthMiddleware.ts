@@ -5,13 +5,15 @@ import { OAuth2Client } from "@prisma/client";
 
 export const verifyOAuthClient = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { clientId, responseType, redirectUri, scopes }:
+        const { clientId, responseType, scopes }:
             {
                 clientId: string
                 responseType: string,
                 redirectUri: string,
                 scopes: string[]
             } = req.body.meta;
+
+        const redirectUri = req.body.meta.redirectUri.split('?')[0];
         const client = await db.oAuth2Client.findUnique({
             where: {
                 clientId: clientId,
@@ -67,7 +69,7 @@ export const verifyOAuthClient = async (req: Request, res: Response, next: NextF
                 statusCode: 409,
                 type: "request/failed",
                 error: {
-                    scopes: "Invalid response_type. response_type sent does not match with the response_type the app was registered with!"
+                    response_type: "Invalid response_type. response_type sent does not match with the response_type the app was registered with!"
                 }
             });
             return next(error);

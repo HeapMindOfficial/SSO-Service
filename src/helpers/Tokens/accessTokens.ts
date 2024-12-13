@@ -35,7 +35,7 @@ export const generateAccessToken = async (code: string) => {
             userId: authCode.userId,
             scopes: authCode.scopes,
             sessionId: authCode.sessionId,
-            expiresAt: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
+            expiresAt: new Date(Date.now() + 24* 60 * 60 * 1000), // Expires in 24 hour
         },
     });
 
@@ -54,3 +54,44 @@ export const generateAccessToken = async (code: string) => {
 
     return [accessToken, refreshToken];
 };
+
+
+export const generateNewAccessToken = async (refreshToken: string) => {
+    // Validate the refresh token
+    const token = await db.refreshToken.findUnique({
+        where: { token: refreshToken },
+        include: { client: true, user: true },
+    });
+
+    if (!token) {
+        throw new Error("Invalid refresh token");
+    }
+
+    // Check if the refresh token has expired
+    if (token.expiresAt < new Date()) {
+        throw new Error("Refresh token expired");
+    }
+
+    const oldAccessToken = await db.accessToken.findFirst({
+        where: {
+            sessionId: token.sessionId,
+        }
+    })
+
+    // Generate a secure access token
+    const accessToken = crypto.randomBytes(128).toString("hex");
+
+    // Save the access token in the database
+    const newAccessToken = await db.accessToken.create({
+        data: {
+            token: accessToken,
+            clientId: token.clientId,
+            userId: token.userId,
+            scopes: oldAccessToken?.scopes,
+            sessionId: token.sessionId,
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hour
+        },
+    });
+
+    return accessToken;
+}
