@@ -312,7 +312,7 @@ export const getUserDetails = async (req: Request, res: Response, next: NextFunc
             return next(new AppError({
                 message: "Unauthorized",
                 statusCode: 401,
-                reason: "UNAUTHORIZED",
+                reason: "Unauthorized",
                 type: "request/error",
             }));
         }
@@ -367,7 +367,7 @@ export const getUserDetails = async (req: Request, res: Response, next: NextFunc
             return next(new AppError({
                 message: "Unauthorized",
                 statusCode: 401,
-                reason: "UNAUTHORIZED",
+                reason: "Unauthorized",
                 type: "request/error",
             }));
         }
@@ -379,7 +379,7 @@ export const getUserDetails = async (req: Request, res: Response, next: NextFunc
             return next(new AppError({
                 message: "Unauthorized",
                 statusCode: 401,
-                reason: "UNAUTHORIZED",
+                reason: "Unauthorized",
                 type: "request/error",
             }));
         }
