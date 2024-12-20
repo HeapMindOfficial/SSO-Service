@@ -12,7 +12,7 @@ import { sessionTokens } from "../../helpers/Tokens/sessionToken";
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email, password, name } = req.body.data;
+        const { email, password, firstName, middleName, lastName } = req.body.data;
         const existingUser = await db.user.findUnique({
             where: {
                 email,
@@ -35,7 +35,9 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             data: {
                 email,
                 password: hashedPassword,
-                name,
+                firstName,
+                lastName,
+                middleName
             },
         });
 
@@ -300,6 +302,127 @@ export const regenerateToken = async (req: Request, res: Response, next: NextFun
             reason: "INTERNAL_SERVER_ERROR",
             type: "request/error",
         }));
+    }
+}
+
+export const getUserDetails = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) {
+            return next(new AppError({
+                message: "Unauthorized",
+                statusCode: 401,
+                reason: "UNAUTHORIZED",
+                type: "request/error",
+            }));
+        }
+
+        //exclude password amd get the user
+        const user = await db.user.findFirst({
+            where: {
+                accessTokens: {
+                    some: {
+                        token,
+                    },
+                },
+            },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+                createdAt: true,
+                updatedAt: true,
+                deleted: true,
+                disabled: true,
+                accessTokens: {
+                    where: {
+                        token,
+                    },
+                    select: {
+                        id: true,
+                        token: true,
+                        clientId: true,
+                        scopes: true,
+                        sessionId: true,
+                        expiresAt: true,
+                        createdAt: true,
+                        session: {
+                            select: {
+                                id: true,
+                                userId: true,
+                                token: true,
+                                createdAt: true,
+                                updatedAt: true,
+                                expiresAt: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!user || !user.accessTokens.length || !user.accessTokens[0].session) {
+            return next(new AppError({
+                message: "Unauthorized",
+                statusCode: 401,
+                reason: "UNAUTHORIZED",
+                type: "request/error",
+            }));
+        }
+
+        const now = new Date();
+        const tokenExpiry = user.accessTokens[0].expiresAt;
+        const sessionExpiry = user.accessTokens[0].session.expiresAt;
+        if (now > tokenExpiry || now > sessionExpiry) {
+            return next(new AppError({
+                message: "Unauthorized",
+                statusCode: 401,
+                reason: "UNAUTHORIZED",
+                type: "request/error",
+            }));
+        }
+
+        if (user.deleted || user.disabled) {
+            return next(new AppError({
+                message: "User account is disabled/deleted. Contact the administrator",
+                statusCode: 403,
+                reason: "FORBIDDEN",
+                type: "request/error",
+            }));
+        }
+
+        const responseUserData = {
+            id: user.id,
+            email: user.email,
+            name: {
+                first: user.firstName,
+                middle: user.middleName,
+                last: user.lastName,
+            },
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            deleted: user.deleted,
+            disabled: user.disabled,
+            scopes: user.accessTokens[0].scopes,
+        }
+
+
+        return responseHandler({
+            status: 200,
+            success: true,
+            message: "User details fetched successfully",
+            data: responseUserData,
+        }, req, res);
+    } catch (error: Error | any) {
+        return next(new AppError({
+            message: error?.message || "Internal server error",
+            statusCode: 500,
+            reason: "INTERNAL_SERVER_ERROR",
+            type: "request/error",
+        }));
+
     }
 }
 
