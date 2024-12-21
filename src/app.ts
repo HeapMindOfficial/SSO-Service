@@ -12,6 +12,7 @@ import AuthRoutes from "./routes/Auth";
 import OriginRoutes from "./routes/Origins";
 import config from "./config";
 import db from "./Services/DB";
+import { decryptor } from "./middlewares/decryptor";
 
 //initializations
 const app = express();
@@ -48,7 +49,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+app.use(decryptor);
 // Static files access
 app.use("/", express.static(path.join(__dirname, "../public")));
 

@@ -11,6 +11,7 @@ const requiredEnvVars = [
     'JWT_REFRESH_TOKEN_SECRET',
     'NODE_ENV',
     'HASH_SECRET',
+    'DECRYPTION_PRIVATE_KEY'
 ];
 
 const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
@@ -39,6 +40,7 @@ let config = {
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
     ALLOWED_ORIGINS: [] as string[],
+    DECRYPTION_PRIVATE_KEY: process.env.DECRYPTION_PRIVATE_KEY as string,
 };
 
 export default config;
