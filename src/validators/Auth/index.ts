@@ -9,7 +9,7 @@ export const userRegistrationSchema = z.object({
             .max(100, { message: "Password must not exceed 100 characters" }),
         firstName: z.string().min(1, { message: "First Name is required" }),
         lastName: z.string().min(1, { message: "Last Name is required" }),
-        middleName: z.string().min(1, { message: "Middle Name is required" }),
+        middleName: z.string().optional(),
     }).required(),
     meta: z.object({
         responseType: z.string().min(1, { message: "Response type is required" }),
